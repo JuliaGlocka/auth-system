@@ -1,58 +1,102 @@
 import os
-
+import uuid
+import bcrypt
+import getpass
+from cryptography.fernet import Fernet
 
 file_path = "credentials.txt"
+key_file = "secret.key"
+
+# Generowanie klucza szyfrowania, jeśli nie istnieje
+if not os.path.exists(key_file):
+    with open(key_file, 'wb') as keyfile:
+        key = Fernet.generate_key()
+        keyfile.write(key)
+else:
+    with open(key_file, 'rb') as keyfile:
+        key = keyfile.read()
+
+cipher = Fernet(key)
 
 
-if not os.path.exists(file_path):
-    with open(file_path, 'w') as file:
-        file.write("username: password\n")
+def hash_password(password):
+    """Hashuje hasło za pomocą bcrypt."""
+    salt = bcrypt.gensalt()
+    return bcrypt.hashpw(password.encode(), salt).decode()
+
+
+def verify_password(password, hashed_password):
+    """Sprawdza, czy hasło pasuje do zaszyfrowanego hasła."""
+    return bcrypt.checkpw(password.encode(), hashed_password.encode())
+
+
+def encrypt_data(data):
+    """Szyfruje dane przed zapisaniem do pliku."""
+    return cipher.encrypt(data.encode()).decode()
+
+
+def decrypt_data(data):
+    """Odszyfrowuje dane pobrane z pliku."""
+    return cipher.decrypt(data.encode()).decode()
 
 
 def signup():
-    while True:
-            email = input('Write your email: ')
-            password = input("Choose your password. Must be at least 8 characters long and consist of at least 1 capital letter and 1 special sign: ")
+    """Rejestracja użytkownika z UUID i szyfrowaniem danych."""
+    email = input('Write your email: ')
+    password = getpass.getpass("Choose your password (min. 8 characters, 1 capital letter, 1 special character): ")
 
+    if len(password) >= 8 and not (password.isalnum() and password.islower()):
+        password_confirmation = getpass.getpass('Repeat your password: ')
 
-            if len(password) >= 8 and not(password.isalnum() and password.islower()):
-                password_confirmation = input('Repeat your password to finalize: ')
-            
-                if password_confirmation == password:
-                    with open(file_path, 'a') as file:
-                        file.write(email + ": " + password + "\n")
-                    print("Registration successful!")
-                    break
-                else:
-                    print("Passwords do not match. Try again.")
+        if password_confirmation == password:
+            user_id = str(uuid.uuid4())  # Generowanie UUID
+            hashed_password = hash_password(password)  # Hashowanie hasła
+            encrypted_entry = encrypt_data(f"{user_id}: {email}: {hashed_password}")
+
+            with open(file_path, 'a') as file:
+                file.write(encrypted_entry + "\n")
+
+            print(f"Registration successful! Your User ID: {user_id}")
+
+            # Ukrycie pliku na Windows/Linux/Mac
+            if os.name == 'nt':
+                os.system(f"attrib +h {file_path}")  # Ukrywanie pliku na Windows
             else:
-                print("Password does not meet the requirements. Try again.")
+                os.system(f"chmod 600 {file_path}")  # Ograniczenie dostępu na Linux/Mac
 
-signup()
+        else:
+            print("Passwords do not match. Try again.")
+    else:
+        print("Password does not meet the requirements. Try again.")
+
 
 def login():
+    """Logowanie użytkownika, odczytując zaszyfrowane dane."""
+    email = input("Write your email: ")
+
     with open(file_path, 'r') as file:
-        email = input("Write your email: ")
         for line in file:
-            #technically try except is not necessary with this credential.txt and signup logic, but it will stay for case of manual file changes.
             try:
-                stored_login, stored_password = line.strip().split(":")
-            except ValueError:
-                print("Invalid line format in credential source")
+                decrypted_line = decrypt_data(line.strip())
+                stored_uuid, stored_email, stored_hashed_password = decrypted_line.split(": ")
+            except:
+                print("Error reading data.")
                 continue
 
-            match email:
-                    case _ if stored_login != email:
-                        continue
+            if stored_email != email:
+                continue  # Szukamy dalej
 
-                    case _ if stored_login == email:
-                        password = input("Password: ")
-                        if password == stored_password.strip():
-                            print("You have logged in!")
-                            return
-                        else:
-                            print("Invalid password. Try again.")
-                            return
-    print("No such email in database. Try again")
+            password = getpass.getpass("Password: ")
+            if verify_password(password, stored_hashed_password):
+                print(f"You have logged in! Your User ID is: {stored_uuid}")
+                return
+            else:
+                print("Invalid password. Try again.")
+                return
 
+    print("No such email in database. Try again.")
+
+
+# Uruchamiamy rejestrację i logowanie
+signup()
 login()

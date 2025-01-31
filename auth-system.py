@@ -18,7 +18,6 @@ else:
 
 cipher = Fernet(key)
 
-
 def hash_password(password):
     """Hashuje hasło za pomocą bcrypt."""
     salt = bcrypt.gensalt()

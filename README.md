@@ -33,6 +33,9 @@ This is a simple authentication system built using Python. The system allows use
 │   ├── 📁 `.idea/` → IDE-specific settings (PyCharm).  
 │   ├── 📁 `__pycache__/` → Stores compiled Python files.  
 
+
+
+  ![](img.png)
 ---
 
 ## Features
@@ -89,3 +92,7 @@ This is a simple authentication system built using Python. The system allows use
 This project relies on the following dependencies:
 - bcrypt: Used for secure password hashing.
 - cryptography.Fernet: Used for encrypting and decrypting user data.
+
+
+
+

@@ -4,7 +4,20 @@ from encryption import encrypt_data, hash_password
 from config import file_path
 
 def validate_email(email):
-    return bool(email.strip()) and email.count("@") == 1
+    email = email.strip()
+    if not email:
+        return False
+    if email.count("@") != 1:
+        return False
+    local, domain = email.split("@")
+    if not local or not domain:
+        return False
+    if '.' not in domain:
+        return False
+    domain_parts = domain.split('.')
+    if any(not part for part in domain_parts):
+        return False
+    return True
 
 def validate_password(password):
     return (

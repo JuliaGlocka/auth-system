@@ -36,7 +36,13 @@
 ehthumbs.db
 Thumbs.db
 
+# Python bytecode files #
+##########################
+__pycache__/
+*.pyc
+*.pyo
+
+# Sensitive files #
+###################
 credentials.txt
 secret.key
-credentials.txt
-credentials.txt

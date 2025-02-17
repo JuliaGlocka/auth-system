@@ -22,7 +22,6 @@ This is a simple authentication system built using Python. The system allows use
 │  
 ├── 📁 **Configuration & Data Management**  
 │ ├── 📄 `config.py` → Contains file paths, database connection settings & cryptographic key management.  
-│ ├── 📄 `db.py` → Manages the connection and operations for the PostgreSQL database.  
 │  
 ├── 📁 **Environment & Dependencies**  
 │ ├── 📄 `requirements.txt` → Lists required dependencies.  

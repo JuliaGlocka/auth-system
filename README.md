@@ -34,7 +34,7 @@ This is a simple authentication system built using Python. The system allows use
 │ ├── 📁 `.idea/` → IDE-specific settings (PyCharm).  
 │ ├── 📁 `__pycache__/` → Stores compiled Python files.
 
-![](img.png)
+![](Python Authentication System.png)
 
 ----------
 

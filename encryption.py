@@ -1,9 +1,8 @@
 import os
 import bcrypt
 from cryptography.fernet import Fernet, InvalidToken
-from config import key_file, file_path as credentials
+from config import key_file
 
-# Tworzenie klucza, jeśli nie istnieje
 if not os.path.exists(key_file):
     with open(key_file, 'wb') as keyfile:
         key = Fernet.generate_key()
@@ -13,11 +12,6 @@ else:
         key = keyfile.read()
 
 cipher = Fernet(key)
-
-# Tworzenie credentials.txt, jeśli nie istnieje
-if not os.path.exists(credentials):
-    with open(credentials, 'w') as file:
-        file.write("")
 
 def hash_password(password):
     salt = bcrypt.gensalt()
@@ -33,5 +27,5 @@ def decrypt_data(data):
     try:
         return cipher.decrypt(data.encode()).decode()
     except InvalidToken:
-        print("Decryption error: Data may be corrupted or invalid. Skipping entry.")
+        print("Decryption error: Data may be corrupted or invalid.")
         return None

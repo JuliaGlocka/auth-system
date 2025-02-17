@@ -1,43 +1,27 @@
-from encryption import decrypt_data, verify_password
-from config import file_path
-
-def validate_email(email):
-    return bool(email.strip()) and email.count("@") == 1
-
-def validate_password(password):
-    return (
-        len(password) >= 8 and
-        any(not c.isalnum() for c in password) and
-        any(c.isupper() for c in password)
-    )
+from encryption import verify_password, decrypt_data
+from config import get_db_connection
 
 def login():
     email = input("Write your email: ")
+
     try:
-        with open(file_path, 'r') as file:
-            for line in file:
-                decrypted_line = decrypt_data(line.strip())
-                if decrypted_line is None:
-                    print("Skipping this entry due to decryption failure.")
-                    continue
+        with get_db_connection() as connection:
+            with connection.cursor() as cursor:
+                cursor.execute("SELECT id, email, password_hash FROM users")
+                users = cursor.fetchall()
 
-                try:
-                    stored_uuid, stored_email, stored_hashed_password = decrypted_line.split(":")
-                except ValueError:
-                    print("Error: Data format is incorrect. Skipping entry.")
-                    continue
+                for stored_uuid, encrypted_email, stored_hashed_password in users:
+                    decrypted_email = decrypt_data(encrypted_email)
 
-                if stored_email.strip() != email.strip():
-                    continue
+                    if decrypted_email and decrypted_email == email:
+                        password = input("Password: ")
+                        if verify_password(password, stored_hashed_password):
+                            print(f"You have logged in! Your User ID is: {stored_uuid}")
+                            return
+                        else:
+                            print("Invalid password. Try again.")
+                            return
 
-                password = input("Password: ")
-                if verify_password(password, stored_hashed_password.strip()):
-                    print(f"You have logged in! Your User ID is: {stored_uuid}")
-                    return
-                else:
-                    print("Invalid password. Try again.")
-                    return
-    except FileNotFoundError:
-        print("Error: No credentials database found. Please sign up first.")
-
-    print("No such email in database. Try again.")
+                print("No such email in database. Try again.")
+    except Exception as e:
+        print(f"Error: {e}")
